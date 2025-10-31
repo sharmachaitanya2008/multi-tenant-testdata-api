@@ -1,0 +1,2 @@
+package com.example.testdataservice.dto; import java.time.Instant;
+public class TestDataDto { private Long id; private String type; private String payload; private Instant syncedAt; public TestDataDto(){} public TestDataDto(Long id,String type,String payload,Instant syncedAt){this.id=id;this.type=type;this.payload=payload;this.syncedAt=syncedAt;} public Long getId(){return id;} public String getType(){return type;} public String getPayload(){return payload;} public Instant getSyncedAt(){return syncedAt;} }

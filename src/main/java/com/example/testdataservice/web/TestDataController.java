@@ -1,0 +1,5 @@
+package com.example.testdataservice.web; import com.example.testdataservice.dto.TestDataDto; import com.example.testdataservice.service.RedisAllocationService; import org.springframework.http.ResponseEntity; import org.springframework.web.bind.annotation.*; import java.util.Optional;
+@RestController @RequestMapping("/data") public class TestDataController { private final RedisAllocationService service; public TestDataController(RedisAllocationService service){ this.service = service; }
+    @PostMapping("/allocate") public ResponseEntity<?> allocate(@RequestParam("env") String env, @RequestParam("type") String type){ Optional<TestDataDto> opt = service.allocate(env, type); return opt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(404).body("No available data")); }
+    @PostMapping("/release/{id}") public ResponseEntity<?> release(@RequestParam("env") String env, @PathVariable("id") Long id){ boolean ok = service.release(env, id); return ok? ResponseEntity.ok("released"):ResponseEntity.status(404).body("not found"); }
+}

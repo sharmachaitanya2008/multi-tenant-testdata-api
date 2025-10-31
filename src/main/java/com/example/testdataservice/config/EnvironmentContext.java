@@ -1,0 +1,7 @@
+package com.example.testdataservice.config;
+public class EnvironmentContext {
+    private static final ThreadLocal<String> current = new ThreadLocal<>();
+    public static void set(String env) { current.set(env); }
+    public static String get() { return current.get(); }
+    public static void clear() { current.remove(); }
+}
