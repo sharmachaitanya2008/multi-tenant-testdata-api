@@ -1,0 +1,36 @@
+package com.example.testdata.service;
+
+import com.example.testdata.dto.EnvironmentData;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.query.*;
+import org.springframework.stereotype.Service;
+
+@Service
+public class MongoStorageService {
+
+    private final MongoTemplate mongo;
+
+    public MongoStorageService(MongoTemplate mongo){ this.mongo = mongo; }
+
+    private String coll(String env){ return "test_data_" + env.toLowerCase(); }
+
+    public void ensureCollectionAndIndexes(String env){
+        String c = coll(env);
+        if (!mongo.collectionExists(c)) mongo.createCollection(c);
+        mongo.indexOps(c).ensureIndex(new Index().on("lease.expiresAt", Index.Direction.ASC));
+        mongo.indexOps(c).ensureIndex(new Index().on("queryA.category", Index.Direction.ASC));
+    }
+
+    public void upsertEnvironmentDoc(String env, EnvironmentData doc){
+        String c = coll(env);
+        Query q = Query.query(Criteria.where("_id").is(doc.getId()));
+        Update u = new Update()
+                .setOnInsert("_id", doc.getId())
+                .set("queryA", doc.getQueryA())
+                .set("queryB", doc.getQueryB())
+                .set("syncedAt", doc.getSyncedAt())
+                .set("lease", doc.getLease());
+        mongo.upsert(q, u, c);
+    }
+}
