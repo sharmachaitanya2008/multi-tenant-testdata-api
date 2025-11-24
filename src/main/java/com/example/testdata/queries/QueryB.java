@@ -1,1 +1,12 @@
-package com.example.testdata.queries; public class QueryB{ public static final String BASE = "SELECT CONVERT(CHAR(50), master_id) AS id, amount, order_date FROM ORDERS"; public static String byMasterId(){ return BASE + " WHERE CONVERT(CHAR(50), master_id) = :id"; } }
+package com.example.testdata.queries;
+
+public class QueryB {
+    public static final String BASE = """
+                SELECT master_member_id AS memberId, amount, txn_date AS txnDate
+                FROM MEMBER_ORDERS
+            """;
+
+    public static String byMemberId() {
+        return BASE + " WHERE master_member_id = :memberId";
+    }
+}

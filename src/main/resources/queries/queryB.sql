@@ -1,1 +1,5 @@
-SELECT CONVERT(CHAR(50), master_id) AS id, amount, order_date FROM ORDERS
+-- queryB.sql : one-to-many properties (orders, events, etc.), master key aliased as memberId
+SELECT master_member_id AS memberId,
+       amount,
+       txn_date AS txnDate
+FROM MEMBER_ORDERS

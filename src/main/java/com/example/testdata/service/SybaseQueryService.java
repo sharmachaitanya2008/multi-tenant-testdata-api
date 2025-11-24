@@ -1,48 +1,85 @@
 package com.example.testdata.service;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.stereotype.Service;
-import java.util.*;
-import java.util.stream.Collectors;
+
+import com.example.testdata.dto.EnvironmentData;
 import com.example.testdata.dto.QueryAResult;
 import com.example.testdata.dto.QueryBResult;
-import com.example.testdata.dto.EnvironmentData;
 import com.example.testdata.queries.QueryA;
 import com.example.testdata.queries.QueryB;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class SybaseQueryService {
+
     private final NamedParameterJdbcTemplate jdbc;
-    public SybaseQueryService(NamedParameterJdbcTemplate jdbc){ this.jdbc = jdbc; }
-    public <T> List<T> fetchList(String sql, Map<String,Object> params, Class<T> type){ return jdbc.query(sql, params, new BeanPropertyRowMapper<>(type)); }
-    public <T> T fetchOne(String sql, Map<String,Object> params, Class<T> type){ return jdbc.queryForObject(sql, params, new BeanPropertyRowMapper<>(type)); }
-    public List<QueryAResult> fetchA_Bulk(){ return fetchList(QueryA.BASE, Map.of(), QueryAResult.class); }
-    public List<QueryBResult> fetchB_Bulk(){ return fetchList(QueryB.BASE, Map.of(), QueryBResult.class); }
-    public QueryAResult fetchA_ById(String id){ return fetchOne(QueryA.byId(), Map.of("id", id), QueryAResult.class); }
-    public List<QueryBResult> fetchB_ById(String id){ return fetchList(QueryB.byMasterId(), Map.of("id", id), QueryBResult.class); }
-    public Map<String, EnvironmentData> fetchBulkAsMap(){
-        List<QueryAResult> a = fetchA_Bulk();
-        List<QueryBResult> b = fetchB_Bulk();
-        Map<String, QueryAResult> aById = a.stream().collect(Collectors.toMap(QueryAResult::getId, x -> x));
-        Map<String, List<QueryBResult>> bById = b.stream().collect(Collectors.groupingBy(QueryBResult::getId));
-        Set<String> ids = new HashSet<>(); ids.addAll(aById.keySet()); ids.addAll(bById.keySet());
-        Map<String, EnvironmentData> out = new HashMap<>();
-        for (String id : ids){
+
+    public SybaseQueryService(NamedParameterJdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    public <T> List<T> fetchList(String sql, Map<String, ?> params, Class<T> type) {
+        return jdbc.query(sql, params, new BeanPropertyRowMapper<>(type));
+    }
+
+    public <T> T fetchOne(String sql, Map<String, ?> params, Class<T> type) {
+        return jdbc.queryForObject(sql, params, new BeanPropertyRowMapper<>(type));
+    }
+
+    // Bulk fetch
+    public List<QueryAResult> fetchA_Bulk() {
+        return fetchList(QueryA.BASE, Map.of(), QueryAResult.class);
+    }
+
+    public List<QueryBResult> fetchB_Bulk() {
+        return fetchList(QueryB.BASE, Map.of(), QueryBResult.class);
+    }
+
+    // Single ID fetch
+    public QueryAResult fetchA_ByMemberId(Long memberId) {
+        return fetchOne(QueryA.byMemberId(), Map.of("memberId", memberId), QueryAResult.class);
+    }
+
+    public List<QueryBResult> fetchB_ByMemberId(Long memberId) {
+        return fetchList(QueryB.byMemberId(), Map.of("memberId", memberId), QueryBResult.class);
+    }
+
+    // Bulk assemble -> Map<memberId, EnvironmentData>
+    public Map<Long, EnvironmentData> fetchBulkAsMap() {
+        List<QueryAResult> aList = fetchA_Bulk();
+        List<QueryBResult> bList = fetchB_Bulk();
+
+        Map<Long, QueryAResult> aByKey = aList.stream().collect(Collectors.toMap(QueryAResult::getMemberId, x -> x));
+        Map<Long, List<QueryBResult>> bByKey = bList.stream().collect(Collectors.groupingBy(QueryBResult::getMemberId));
+
+        Set<Long> keys = new HashSet<>();
+        keys.addAll(aByKey.keySet());
+        keys.addAll(bByKey.keySet());
+
+        Map<Long, EnvironmentData> out = new HashMap<>();
+        for (Long memberId : keys) {
             EnvironmentData d = new EnvironmentData();
-            d.setId(id);
-            d.setQueryA(aById.get(id));
-            d.setQueryB(bById.getOrDefault(id, List.of()));
+            d.setMemberId(memberId);
+            d.setQueryA(aByKey.get(memberId));
+            d.setQueryB(bByKey.getOrDefault(memberId, List.of()));
             d.setSyncedAt(java.time.Instant.now());
-            out.put(id, d);
+            d.setLease(new EnvironmentData.Lease());
+            out.put(memberId, d);
         }
         return out;
     }
-    public EnvironmentData fetchSingleRecord(String id){
+
+    // Single record assemble for selective refresh
+    public EnvironmentData fetchSingleRecord(Long memberId) {
         EnvironmentData d = new EnvironmentData();
-        d.setId(id);
-        d.setQueryA(fetchA_ById(id));
-        d.setQueryB(fetchB_ById(id));
+        d.setMemberId(memberId);
+        d.setQueryA(fetchA_ByMemberId(memberId));
+        d.setQueryB(fetchB_ByMemberId(memberId));
         d.setSyncedAt(java.time.Instant.now());
+        d.setLease(new EnvironmentData.Lease());
         return d;
     }
 }

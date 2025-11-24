@@ -1,1 +1,2 @@
-SELECT CONVERT(CHAR(50), id) AS id FROM TEST_DATA WHERE status = 'ACTIVE'
+-- ids_to_sync.sql : return numeric member ids to hydrate
+SELECT member_id AS memberId FROM MASTER_TABLE WHERE status = 'ACTIVE';
