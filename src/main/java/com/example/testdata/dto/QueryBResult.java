@@ -1,9 +1,1 @@
-package com.example.testdata.dto;
-
-public class QueryBResult {
-    private Long totalOrders;
-    private Long orderCount;
-    public QueryBResult() {}
-    public Long getTotalOrders(){return totalOrders;} public void setTotalOrders(Long v){this.totalOrders=v;}
-    public Long getOrderCount(){return orderCount;} public void setOrderCount(Long v){this.orderCount=v;}
-}
+package com.example.testdata.dto; public class QueryBResult{ private String id; private Double amount; private String orderDate; public String getId(){return id;} public void setId(String id){this.id=id;} public Double getAmount(){return amount;} public void setAmount(Double a){this.amount=a;} public String getOrderDate(){return orderDate;} public void setOrderDate(String d){this.orderDate=d;} }

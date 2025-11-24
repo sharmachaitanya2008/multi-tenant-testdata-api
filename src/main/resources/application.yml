@@ -4,28 +4,15 @@ server:
 spring:
   data:
     mongodb:
-      host: localhost
-      port: 27017
-      database: testdata_db
+      uri: mongodb://testdata_user:Sup3rS3cret@localhost:27017/testdata_db?authSource=admin
 
 app:
-  api:
-    key: change-me
   sync:
     cron: "0 0/5 * * * *"
   lease:
     minutes: 15
-  hikari:
-    max-pool-size: 3
-    min-idle: 1
-    connection-timeout-ms: 10000
-    max-lifetime-ms: 600000
   environments:
     - key: env1
       url: jdbc:sybase:Tds:sybase-host1:5000/db1
       username: user1
       password: pass1
-    - key: env2
-      url: jdbc:sybase:Tds:sybase-host2:5000/db2
-      username: user2
-      password: pass2

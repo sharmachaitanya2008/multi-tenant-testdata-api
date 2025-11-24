@@ -1,0 +1,1 @@
+package com.example.testdata.queries; public class QueryA{ public static final String BASE = "SELECT CONVERT(CHAR(50), id) AS id, category, status FROM TEST_DATA"; public static String byId(){ return BASE + " WHERE CONVERT(CHAR(50), id) = :id"; } }
